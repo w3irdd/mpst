@@ -35,7 +35,7 @@ def run(custom_input_enabled=False):
     if custom_input_enabled:
         json_list = dataparse.csv_to_json_list("input.csv", ip_whitelist)
     else:
-        json_list = get_json_list_from_API()
+        json_list = get_json_list_from_API(ip_whitelist)
 
     df = dataparse.json_to_dataframe(json_list)
     dataparse.dataframe_to_excel(df, writer, 'Все события', new_column_names)
@@ -53,7 +53,7 @@ def run(custom_input_enabled=False):
     print("\nDone!")
 
 
-def get_json_list_from_API():
+def get_json_list_from_API(ip_list):
     with open('config/credentials.json', 'r') as file:
         creds = json.load(file)
 
@@ -104,7 +104,9 @@ def get_json_list_from_API():
     ip_cache = {}
     for event in total_events:
         src_ip = event.get('src.ip')
-        if src_ip:
+        if dataparse.ip_in_list(src_ip, ip_list):
+            total_events.remove(event)
+        elif src_ip:
             if src_ip not in ip_cache:
                 count += 1
                 ip_cache[src_ip] = api_client.get_country_by_ip(src_ip)
