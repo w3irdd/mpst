@@ -75,7 +75,7 @@ def get_json_list_from_API():
     events_buffer = []
 
     while True:
-        
+
         events, total_count, last_incident_time = api_client.get_events_by_filter(
             root_url_api=ROOT_URL_API,
             access_token=bearer_token,
@@ -91,14 +91,25 @@ def get_json_list_from_API():
             break
 
         time_to = int(datetime.datetime.strptime(last_incident_time, "%Y-%m-%dT%H:%M:%S.%f0Z").timestamp()) + 15000
-    
+
     unique_events = {}
     for event in events_buffer:
         uuid = event['uuid']
         if uuid not in unique_events:
             unique_events[uuid] = event
-    
+
     total_events = list(unique_events.values())
 
+    count = 0
+    ip_cache = {}
+    for event in total_events:
+        src_ip = event.get('src.ip')
+        if src_ip:
+            if src_ip not in ip_cache:
+                count += 1
+                ip_cache[src_ip] = api_client.get_country_by_ip(src_ip)
+            event['src.geo.country'] = ip_cache[src_ip]
+
     print(len(total_events))
+    print(f"{count} IPs")
     return total_events

@@ -49,3 +49,19 @@ def get_events_by_filter(root_url_api, access_token, filter, time_from, time_to=
     last_incident_time = events[-1]["time"]
 
     return events, total_count, last_incident_time
+
+
+def get_country_by_ip(ip_address):
+    try:
+        url = f"https://api.iplocation.net/?ip={ip_address}"
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            country = data.get('country_name')
+            return country
+        else:
+            return f"Ошибка: API error {response.status_code}"
+    except Exception as e:
+        return f"Error: {e}"
